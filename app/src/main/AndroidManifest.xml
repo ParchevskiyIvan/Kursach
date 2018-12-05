@@ -11,7 +11,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".mainWithFragments.MainActivity"
             android:label="@string/main_activity_toolbar_header_text"
             android:screenOrientation="portrait">
             <intent-filter android:label="@string/app_name">
@@ -23,18 +23,20 @@
         <activity
             android:name=".Settings"
             android:label="@string/settings_activity_toolbar_header_text"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".mainWithFragments.MainActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+                android:value=".mainWithFragments.MainActivity" />
         </activity>
         <activity android:name=".GraphViewActivity" />
         <activity android:name=".EmailPasswordActivity" />
 
         <service android:name=".GpsServices" />
 
-        <activity android:name=".DataFromDB"></activity>
+        <activity android:name=".DataFromDBActivity" />
+
+
     </application>
 
 </manifest>

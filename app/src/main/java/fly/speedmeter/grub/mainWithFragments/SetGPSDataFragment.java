@@ -1,11 +1,14 @@
-package fly.speedmeter.grub;
+package fly.speedmeter.grub.mainWithFragments;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.Location;
@@ -14,37 +17,57 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Chronometer;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.gc.materialdesign.views.ProgressBarCircularIndeterminate;
-import com.gc.materialdesign.widgets.Dialog;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 import com.melnykov.fab.FloatingActionButton;
+import com.melnykov.fab.*;
 
+import java.util.List;
 import java.util.Locale;
 
+import fly.speedmeter.grub.AccelerometerEventListener;
+import fly.speedmeter.grub.Data;
+import fly.speedmeter.grub.DataToBD;
+import fly.speedmeter.grub.GpsServices;
+import fly.speedmeter.grub.R;
+import fly.speedmeter.grub.Settings;
 
-public class MainActivity extends AppCompatActivity implements LocationListener, GpsStatus.Listener {
+import static android.content.Context.SENSOR_SERVICE;
+
+public class SetGPSDataFragment extends Fragment implements LocationListener, GpsStatus.Listener, View.OnClickListener{
 
     private SharedPreferences sharedPreferences;
     private LocationManager mLocationManager;
     private static Data data;
 
-    private Toolbar toolbar;
+    private static final String[] INITIAL_PERMS = {
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.READ_CONTACTS
+    };
+
+    private static final int INITIAL_REQUEST = 1337;
+    private static final int LOCATION_REQUEST = INITIAL_REQUEST + 3;
+
     private FloatingActionButton fab;
     private FloatingActionButton refresh;
-    private ProgressBarCircularIndeterminate progressBarCircularIndeterminate;
+    private ProgressBar progressBarCircularIndeterminate;
     private TextView satellite;
     private TextView status;
     private TextView accuracy;
@@ -55,40 +78,30 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     private TextView accelTime;
     private Chronometer time;
     private Data.onGpsServiceUpdate onGpsServiceUpdate;
-    private float[] accelerationRecords;
-
-    //private FirebaseAuth mAuth;
-
-    DatabaseReference myRef;
-
+    private int temp_seconds;
 
     private boolean firstfix;
 
+    DatabaseReference myRef;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.my_activity);
+
+        SensorManager sensorManager = (SensorManager) getContext().getSystemService(SENSOR_SERVICE);
+
+        Sensor accelerometer =
+                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        SensorEventListener accelaration = new AccelerometerEventListener();
+        sensorManager.registerListener(accelaration, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
         myRef = FirebaseDatabase.getInstance().getReference("Data");
 
         data = new Data(onGpsServiceUpdate);
 
-        accelTime = (TextView) findViewById(R.id.accelTime);
-        accelTime.setText("");
+        temp_seconds = 0;
 
-        accelerationRecords = new float[2];
-
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        //setTitle("");
-        fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setVisibility(View.INVISIBLE);
-
-        refresh = (FloatingActionButton) findViewById(R.id.refresh);
-        refresh.setVisibility(View.INVISIBLE);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         onGpsServiceUpdate = new Data.onGpsServiceUpdate() {
             @Override
@@ -134,18 +147,33 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             }
         };
 
-        mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
-        satellite = (TextView) findViewById(R.id.satellite);
-        status = (TextView) findViewById(R.id.status);
+        mLocationManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_set_gps_data, container, false);
+
+        accelTime = (TextView) view.findViewById(R.id.accelTime);
+        accelTime.setText("");
+
+        fab = (FloatingActionButton) view.findViewById(R.id.fab);
+        fab.setVisibility(View.INVISIBLE);
+        fab.setOnClickListener(this);
+
+        refresh = (FloatingActionButton) view.findViewById(R.id.refresh);
+        refresh.setVisibility(View.INVISIBLE);
+        refresh.setOnClickListener(this);
+
+        satellite = (TextView) view.findViewById(R.id.satellite);
+        status = (TextView) view.findViewById(R.id.status);
         //accuracy = (TextView) findViewById(R.id.accuracy);
-        maxSpeed = (TextView) findViewById(R.id.maxSpeed);
-        averageSpeed = (TextView) findViewById(R.id.averageSpeed);
-        distance = (TextView) findViewById(R.id.distance);
-        time = (Chronometer) findViewById(R.id.time);
-        currentSpeed = (TextView) findViewById(R.id.currentSpeed);
-        progressBarCircularIndeterminate = (ProgressBarCircularIndeterminate) findViewById(R.id.progressBarCircularIndeterminate);
-
+        maxSpeed = (TextView) view.findViewById(R.id.maxSpeed);
+        averageSpeed = (TextView) view.findViewById(R.id.averageSpeedInscription);
+        distance = (TextView) view.findViewById(R.id.distance);
+        time = (Chronometer) view.findViewById(R.id.time);
         time.setText(""); //starttime
         time.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
             boolean isPair = true;
@@ -170,6 +198,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
                 if (data.isRunning()) {
                     chrono.setText(hh + ":" + mm + ":" + ss);
+
+                    if (s % 5 == 0) {// Start from 1 and next each 4 second load to DB
+                        if (s - temp_seconds > 0) {
+                            loadToBD();
+                            Toast.makeText(getContext(), "Data loaded in " + s, Toast.LENGTH_LONG).show();
+                        }
+                        temp_seconds = s;
+                    }
                 } else {
                     if (isPair) {
                         isPair = false;
@@ -182,6 +218,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
             }
         });
+        currentSpeed = (TextView) view.findViewById(R.id.currentSpeed);
+        progressBarCircularIndeterminate = (ProgressBar) view.findViewById(R.id.progressBarCircularIndeterminate);
+
+        return view;
+    }
+
+    private boolean canAccessLocation() {
+        return (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
+    }
+
+    private boolean hasPermission(String perm) {
+        return (PackageManager.PERMISSION_GRANTED == getActivity().checkSelfPermission(perm));
     }
 
     public void onFabClick(View v) {
@@ -191,71 +239,72 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             time.setBase(SystemClock.elapsedRealtime() - data.getTime());
             time.start();
             data.setFirstTime(true);
-            startService(new Intent(getBaseContext(), GpsServices.class));
+            getActivity().startService(new Intent(getActivity(), GpsServices.class));
             refresh.setVisibility(View.INVISIBLE);
         } else {
             fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_play));
             data.setRunning(false);
             status.setText("");
-            stopService(new Intent(getBaseContext(), GpsServices.class));
+            getActivity().stopService(new Intent(getActivity(), GpsServices.class));
             refresh.setVisibility(View.VISIBLE);
         }
     }
 
-    public void onFabGraphClick(View v) {
-        if (R.id.fabGraph == v.getId())
-            startActivity(new Intent(this, GraphViewActivity.class));
-    }
-
-    public void onFabDBClick(View v) {
-        if (R.id.fabDB == v.getId())
-            startActivity(new Intent(this, DataFromDB.class));
-    }
-
     public void onRefreshClick(View v) {
-        loadToBD();
         resetData();
-        stopService(new Intent(getBaseContext(), GpsServices.class));
+        getActivity().stopService(new Intent(getActivity(), GpsServices.class));
     }
 
     public void loadToBD() {
+
         String id = myRef.push().getKey();
-        String accelX =  Float.toString(accelerationRecords[0]);
-        String accelY =  Float.toString(accelerationRecords[1]);
-        MyGPSData data = new MyGPSData(time.getText().toString(), maxSpeed.getText().toString(), averageSpeed.getText().toString(), distance.getText().toString(), accelX, accelY);
+
+        List<Float> accelX = AccelerometerEventListener.getAccelerometerDataX();
+        List<Float> accelY = AccelerometerEventListener.getAccelerometerDataY();
+
+        if (accelX.size() == 0)
+            Toast.makeText(getContext(), "NULL List!", Toast.LENGTH_LONG).show();
+
+        DataToBD data = new DataToBD(time.getText().toString(), maxSpeed.getText().toString(), averageSpeed.getText().toString(), distance.getText().toString(), accelX, accelY);
+
+        assert id != null;
         myRef.child(id).setValue(data);
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
-        firstfix = true;
-        if (!data.isRunning()) {
-            Gson gson = new Gson();
-            String json = sharedPreferences.getString("data", ""); //
-            data = gson.fromJson(json, Data.class);
-        }
-        if (data == null) {
-            data = new Data(onGpsServiceUpdate);
+        if (!canAccessLocation()) {
+            requestPermissions(INITIAL_PERMS, INITIAL_REQUEST);
         } else {
-            data.setOnGpsServiceUpdate(onGpsServiceUpdate);
-        }
+            firstfix = true;
+            if (!data.isRunning()) {
+                Gson gson = new Gson();
+                String json = sharedPreferences.getString("data", "");
+                data = gson.fromJson(json, Data.class);
+            }
+            if (data == null) {
+                data = new Data(onGpsServiceUpdate);
+            } else {
+                data.setOnGpsServiceUpdate(onGpsServiceUpdate);
+            }
 
-        if (mLocationManager.getAllProviders().indexOf(LocationManager.GPS_PROVIDER) >= 0) {
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, this);
-        } else {
-            Log.w("MainActivity", "No GPS location provider found. GPS data display will not be available.");
-        }
+            if (mLocationManager.getAllProviders().indexOf(LocationManager.GPS_PROVIDER) >= 0) {
+                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, this);
+            } else {
+                Log.w("MainActivity", "No GPS location provider found. GPS data display will not be available.");
+            }
 
-        if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            showGpsDisabledDialog();
-        }
+            if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                showGpsDisabledDialog();
+            }
 
-        mLocationManager.addGpsStatusListener(this);
+            mLocationManager.addGpsStatusListener(this);
+        }
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         mLocationManager.removeUpdates(this);
         mLocationManager.removeGpsStatusListener(this);
@@ -269,15 +318,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopService(new Intent(getBaseContext(), GpsServices.class));
+        getActivity().stopService(new Intent(getActivity(), GpsServices.class));
     }
 
-
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_main, menu);
     }
 
     @Override
@@ -289,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Intent intent = new Intent(this, Settings.class);
+            Intent intent = new Intent(getContext(), Settings.class);
             startActivity(intent);
             return true;
         }
@@ -348,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                     fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_play));
                     data.setRunning(false);
                     status.setText("");
-                    stopService(new Intent(getBaseContext(), GpsServices.class));
+                    getActivity().stopService(new Intent(getActivity(), GpsServices.class));
                     fab.setVisibility(View.INVISIBLE);
                     refresh.setVisibility(View.INVISIBLE);
                     //accuracy.setText("");
@@ -368,14 +415,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     }
 
     public void showGpsDisabledDialog() {
-        Dialog dialog = new Dialog(this, getResources().getString(R.string.gps_disabled), getResources().getString(R.string.please_enable_gps));
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage(getResources().getString(R.string.please_enable_gps))
+                .setTitle(getResources().getString(R.string.gps_disabled));
 
-        dialog.setOnAcceptButtonClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        builder.setPositiveButton(R.string.accept_gps_on, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked
                 startActivity(new Intent("android.settings.LOCATION_SOURCE_SETTINGS"));
             }
         });
+        AlertDialog dialog = builder.create();
         dialog.show();
     }
 
@@ -394,13 +444,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         return data;
     }
 
-    public void onBackPressed() {
-        Intent a = new Intent(Intent.ACTION_MAIN);
-        a.addCategory(Intent.CATEGORY_HOME);
-        a.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(a);
-    }
-
     @Override
     public void onStatusChanged(String s, int i, Bundle bundle) {
     }
@@ -413,5 +456,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     public void onProviderDisabled(String s) {
     }
 
-
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.fab:
+                onFabClick(v);
+                break;
+            case  R.id.refresh:
+                onRefreshClick(v);
+                break;
+        }
+    }
 }

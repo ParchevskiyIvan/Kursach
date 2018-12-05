@@ -10,16 +10,12 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-
 
 
 public class EmailPasswordActivity extends AppCompatActivity implements View.OnClickListener{
 
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
+//    private FirebaseAuth mAuth;
+//    private FirebaseAuth.AuthStateListener mAuthListener;
     private EditText ETemail;
     private EditText ETpassword;
 
@@ -28,21 +24,21 @@ public class EmailPasswordActivity extends AppCompatActivity implements View.OnC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emailpassword);
 
-        mAuth = FirebaseAuth.getInstance();
-
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if(user != null ) {
-
-                } else
-                {
-
-                }
-
-            }
-        };
+//        mAuth = FirebaseAuth.getInstance();
+//
+//        mAuthListener = new FirebaseAuth.AuthStateListener() {
+//            @Override
+//            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+//                FirebaseUser user = firebaseAuth.getCurrentUser();
+//                if(user != null ) {
+//
+//                } else
+//                {
+//
+//                }
+//
+//            }
+//        };
 
         ETemail = (EditText) findViewById(R.id.et_email);
         ETpassword = (EditText) findViewById(R.id.et_password);
@@ -59,41 +55,41 @@ public class EmailPasswordActivity extends AppCompatActivity implements View.OnC
     public void onClick(View view) {
         if(view.getId() == R.id.btn_sign_in)
         {
-            signin(ETemail.getText().toString(), ETpassword.getText().toString());
+            //signin(ETemail.getText().toString(), ETpassword.getText().toString());
 
-            startActivity(new Intent(this, MainActivity.class));
+//            startActivity(new Intent(this, MainActivity.class));
 
         }
         else if(view.getId() == R.id.btn_registration)
         {
-            registration(ETemail.getText().toString(), ETpassword.getText().toString());
+            //registration(ETemail.getText().toString(), ETpassword.getText().toString());
         }
 
     }
 
-    public void signin(String email, String password)
-    {
-        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if(task.isSuccessful()){
-                    Toast.makeText(EmailPasswordActivity.this, "Авторизация успешна", Toast.LENGTH_SHORT).show();
-
-                }else Toast.makeText(EmailPasswordActivity.this, "Авторизация провалена", Toast.LENGTH_SHORT).show();
-
-            }
-        });
-    }
-
-    public void registration(String email, String password){
-        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if(task.isSuccessful()){
-                    Toast.makeText(EmailPasswordActivity.this, "Регистрация успешна", Toast.LENGTH_SHORT).show();
-                }else Toast.makeText(EmailPasswordActivity.this, "Регистрация провалена", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+//    public void signin(String email, String password)
+//    {
+//        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+//            @Override
+//            public void onComplete(@NonNull Task<AuthResult> task) {
+//                if(task.isSuccessful()){
+//                    Toast.makeText(EmailPasswordActivity.this, "Авторизация успешна", Toast.LENGTH_SHORT).show();
+//
+//                }else Toast.makeText(EmailPasswordActivity.this, "Авторизация провалена", Toast.LENGTH_SHORT).show();
+//
+//            }
+//        });
+//    }
+//
+//    public void registration(String email, String password){
+//        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+//            @Override
+//            public void onComplete(@NonNull Task<AuthResult> task) {
+//                if(task.isSuccessful()){
+//                    Toast.makeText(EmailPasswordActivity.this, "Регистрация успешна", Toast.LENGTH_SHORT).show();
+//                }else Toast.makeText(EmailPasswordActivity.this, "Регистрация провалена", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
 }
 

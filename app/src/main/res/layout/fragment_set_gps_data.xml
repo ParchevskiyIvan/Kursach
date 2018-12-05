@@ -1,29 +1,15 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fab="http://schemas.android.com/apk/res-auto"
-    xmlns:materialdesign="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true"
-
     android:background="@color/white">
-
-    <android.support.v7.widget.Toolbar
-        style="@style/ToolBarStyle"
-        android:id="@+id/toolbar"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:minHeight="@dimen/abc_action_bar_default_height_material"
-        android:elevation="5dp">
-
-    </android.support.v7.widget.Toolbar>
 
     <RelativeLayout
         android:id="@+id/toolbarSpeed"
         android:layout_width="match_parent"
         android:layout_height="140dp"
-        android:layout_below="@+id/toolbar"
+        android:layout_marginTop="95dp"
         android:layout_gravity="center"
         android:background="@color/white"
         android:elevation="5dp">
@@ -79,22 +65,6 @@
         fab:fab_colorNormal="@color/OrangeRed"
         fab:fab_colorPressed="@color/Red"
         fab:fab_colorRipple="@color/blue_dark" />
-
-    <com.melnykov.fab.FloatingActionButton
-        android:id="@+id/fabDB"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="25dp"
-        android:layout_marginBottom="25dp"
-        android:layout_gravity="center"
-        android:onClick="onFabDBClick"
-        android:src="@drawable/chart"
-        fab:fab_colorNormal="@color/OrangeRed"
-        fab:fab_colorPressed="@color/red"
-        fab:fab_colorRipple="@color/blue_dark" />
-
 
     <com.melnykov.fab.FloatingActionButton
         android:id="@+id/refresh"

@@ -15,6 +15,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import fly.speedmeter.grub.mainWithFragments.SetGPSDataFragment;
+
 public class GpsServices extends Service implements LocationListener, GpsStatus.Listener {
     private LocationManager mLocationManager;
 
@@ -32,7 +37,7 @@ public class GpsServices extends Service implements LocationListener, GpsStatus.
     @Override
     public void onCreate() {
 
-        Intent notificationIntent = new Intent(this, MainActivity.class);
+        Intent notificationIntent = new Intent(this, SetGPSDataFragment.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         contentIntent = PendingIntent.getActivity(
                 this, 0, notificationIntent, 0);
@@ -45,7 +50,7 @@ public class GpsServices extends Service implements LocationListener, GpsStatus.
     }
 
     public void onLocationChanged(Location location) {
-        data = MainActivity.getData();
+        data = SetGPSDataFragment.getData();
         if (data.isRunning()){
             currentLat = location.getLatitude();
             currentLon = location.getLongitude();
@@ -85,7 +90,9 @@ public class GpsServices extends Service implements LocationListener, GpsStatus.
                 .setContentIntent(contentIntent);
 
         if(asData){
-            builder.setContentText(String.format(getString(R.string.notification), data.getMaxSpeed(), data.getDistance()));
+            Double truncatedMaxSpeed = BigDecimal.valueOf(data.getMaxSpeed()).setScale(3, RoundingMode.HALF_UP).doubleValue();
+            Double truncatedDistance = BigDecimal.valueOf(data.getDistance()).setScale(3, RoundingMode.HALF_UP).doubleValue();
+            builder.setContentText(String.format(getString(R.string.notification), truncatedMaxSpeed, truncatedDistance));
         }else{
             builder.setContentText(String.format(getString(R.string.notification), '-', '-'));
         }
