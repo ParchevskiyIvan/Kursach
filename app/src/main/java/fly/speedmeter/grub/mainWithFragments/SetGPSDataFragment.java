@@ -37,8 +37,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 import com.melnykov.fab.FloatingActionButton;
-import com.melnykov.fab.*;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -70,7 +71,6 @@ public class SetGPSDataFragment extends Fragment implements LocationListener, Gp
     private ProgressBar progressBarCircularIndeterminate;
     private TextView satellite;
     private TextView status;
-    private TextView accuracy;
     private TextView currentSpeed;
     private TextView maxSpeed;
     private TextView averageSpeed;
@@ -95,7 +95,7 @@ public class SetGPSDataFragment extends Fragment implements LocationListener, Gp
         SensorEventListener accelaration = new AccelerometerEventListener();
         sensorManager.registerListener(accelaration, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
-        myRef = FirebaseDatabase.getInstance().getReference("Data");
+        myRef = FirebaseDatabase.getInstance().getReference("default-user");
 
         data = new Data(onGpsServiceUpdate);
 
@@ -146,7 +146,6 @@ public class SetGPSDataFragment extends Fragment implements LocationListener, Gp
                 distance.setText(s);
             }
         };
-
 
         mLocationManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
     }
@@ -265,7 +264,10 @@ public class SetGPSDataFragment extends Fragment implements LocationListener, Gp
         if (accelX.size() == 0)
             Toast.makeText(getContext(), "NULL List!", Toast.LENGTH_LONG).show();
 
-        DataToBD data = new DataToBD(time.getText().toString(), maxSpeed.getText().toString(), averageSpeed.getText().toString(), distance.getText().toString(), accelX, accelY);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy_HH:mm:ss");
+        String currentDateAndTime = sdf.format(new Date());
+
+        DataToBD data = new DataToBD(currentDateAndTime, time.getText().toString(), maxSpeed.getText().toString(), averageSpeed.getText().toString(), distance.getText().toString(), accelX, accelY);
 
         assert id != null;
         myRef.child(id).setValue(data);

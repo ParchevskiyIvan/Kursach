@@ -9,7 +9,7 @@
     <string name="time">Time:</string>
     <string name="accuracy">Accuracy</string>
     <string name="satellite">Satellites</string>
-    <string name="deleteAll">delete all from BD</string>
+    <string name="deleteAll">delete from BD</string>
 
     <string name="accept_gps_on">Accept</string>
     <string name="waiting_for_fix">GPS search</string>

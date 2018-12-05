@@ -2,7 +2,7 @@ package fly.speedmeter.grub.mainWithFragments;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,14 +30,14 @@ import java.util.List;
 import fly.speedmeter.grub.DataToBD;
 import fly.speedmeter.grub.R;
 
-public class GetGPSDataFragment extends Fragment {
+public class GetGPSDataFragment extends DialogFragment {
 
     private TextView time, maxSpeed, averageSpeed, distance;
     DatabaseReference myRef;
     private List<Float> accelX = new ArrayList<>();
     private List<Float> accelY = new ArrayList<>();
-    private Button deleteAllData;
     private LineChart lineChart;
+    private Bundle bundle;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -51,10 +51,11 @@ public class GetGPSDataFragment extends Fragment {
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                int count = 0;
+
+                String dateTime = bundle.getString("dateTime");
                 for (DataSnapshot dataSnap : dataSnapshot.getChildren()) {
                     DataToBD data = dataSnap.getValue(DataToBD.class);
-                    if (data != null) {
+                    if (data != null && dateTime.equals(data.m_myDateTime)) {
                         time.setText(data.m_myTime);
                         maxSpeed.setText(data.m_myMaxSpeed);
                         averageSpeed.setText(data.m_myAvgSpeed);
@@ -62,8 +63,6 @@ public class GetGPSDataFragment extends Fragment {
 
                         accelX.addAll(data.m_myAccelX);
                         accelY.addAll(data.m_myAccelY);
-
-                        count++;
                     }
                 }
 
@@ -86,30 +85,18 @@ public class GetGPSDataFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_get_gps_data, container, false);
 
+        bundle = getArguments();
+
         time = (TextView) view.findViewById(R.id.timeDB);
         maxSpeed = (TextView) view.findViewById(R.id.maxSpeedDB);
         averageSpeed = (TextView) view.findViewById(R.id.averageSpeedDB);
         distance = (TextView) view.findViewById(R.id.distanceDB);
-        deleteAllData = (Button) view.findViewById(R.id.deleteAllData);
         lineChart = (LineChart) view.findViewById(R.id.lineChart);
-        myRef = FirebaseDatabase.getInstance().getReference("Data");
-
-        deleteAllData.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                removeDataFromDatabase();
-                Toast.makeText(getContext(), "Data deleted! ", Toast.LENGTH_LONG).show();
-            }
-        });
-
+        myRef = FirebaseDatabase.getInstance().getReference("default-user");
 
         return view;
     }
 
-    private void removeDataFromDatabase() {
-        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
-        rootRef.setValue(null);
-    }
 
     private void createChart() {
         ArrayList<Entry> entries = new ArrayList<>();
@@ -132,6 +119,7 @@ public class GetGPSDataFragment extends Fragment {
         //lineChart.animateX(500);
         lineChart.getDescription().setEnabled(false);
         lineChart.getLegend().setEnabled(false);
+        lineChart.getAxisRight().setEnabled(false);
 
         //refresh
         lineChart.invalidate();

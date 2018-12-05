@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new SetGPSDataFragment(), "Set GPS data");
-        adapter.addFragment(new GetGPSDataFragment(), "Get GPS data");
+        adapter.addFragment(new HistoryFromBD(), "GPS data history");
         viewPager.setAdapter(adapter);
     }
 }

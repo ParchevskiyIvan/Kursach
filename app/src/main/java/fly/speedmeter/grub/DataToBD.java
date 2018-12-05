@@ -7,6 +7,7 @@ import java.util.List;
 @IgnoreExtraProperties
 public class DataToBD {
 
+    public String m_myDateTime;
     public String m_myTime;
     public String m_myMaxSpeed;
     public String m_myAvgSpeed;
@@ -15,10 +16,10 @@ public class DataToBD {
     public List<Float> m_myAccelY;
 
     public DataToBD() {
-
     }
 
-    public DataToBD(String time, String maxSpeed, String avgSpeed, String distance, List<Float> accelX, List<Float> accelY) {
+    public DataToBD(String dateTime, String time, String maxSpeed, String avgSpeed, String distance, List<Float> accelX, List<Float> accelY) {
+        this.m_myDateTime = dateTime;
         this.m_myTime = time;
         this.m_myMaxSpeed = maxSpeed;
         this.m_myAvgSpeed = avgSpeed;
